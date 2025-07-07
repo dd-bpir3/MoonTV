@@ -3,6 +3,9 @@ import { Inter } from 'next/font/google';
 import '../lib/cron';
 
 import './globals.css';
+import 'sweetalert2/dist/sweetalert2.min.css';
+
+import { getConfig } from '@/lib/config';
 
 import AuthProvider from '../components/AuthProvider';
 import { SiteProvider } from '../components/SiteProvider';
@@ -10,11 +13,16 @@ import { ThemeProvider } from '../components/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: process.env.SITE_NAME || 'MoonTV',
-  description: '影视聚合',
-  manifest: '/manifest.json',
-};
+// 动态生成 metadata，支持配置更新后的标题变化
+export async function generateMetadata(): Promise<Metadata> {
+  const config = getConfig();
+
+  return {
+    title: config.SiteConfig.SiteName,
+    description: '影视聚合',
+    manifest: '/manifest.json',
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -29,15 +37,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const siteName = process.env.SITE_NAME || 'MoonTV';
-  const announcement =
-    process.env.ANNOUNCEMENT ||
-    '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
+  const config = getConfig();
+  const siteName = config.SiteConfig.SiteName;
+  const announcement = config.SiteConfig.Announcement;
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取
   const runtimeConfig = {
     STORAGE_TYPE: process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage',
-    ENABLE_REGISTER: process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true',
+    ENABLE_REGISTER: config.UserConfig.AllowRegister,
+    AGGREGATE_SEARCH_RESULT: config.SiteConfig.SearchResultDefaultAggregate,
   };
 
   return (

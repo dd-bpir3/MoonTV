@@ -163,7 +163,7 @@ export default function VideoCard({
         }`}
       >
         {/* 海报图片容器 */}
-        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md group-hover:scale-[1.02] transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
+        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
           {/* 图片占位符 - 骨架屏效果 */}
           <ImagePlaceholder aspectRatio='aspect-[2/3]' />
 
