@@ -1,4 +1,4 @@
-import { Link as LinkIcon, Search } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useRef, useState } from 'react';
@@ -10,10 +10,9 @@ interface DemoCardProps {
   title: string;
   poster: string;
   rate?: string;
-  type?: string;
 }
 
-function SearchCircle({
+function PlayCircleSolid({
   className = '',
   fillColor = 'none',
 }: {
@@ -37,16 +36,12 @@ function SearchCircle({
         strokeWidth='1.5'
         fill={fillColor}
       />
-      <foreignObject x='0' y='0' width='44' height='44'>
-        <div className='w-full h-full flex items-center justify-center'>
-          <Search className='h-5 w-5 text-white' strokeWidth={2} />
-        </div>
-      </foreignObject>
+      <polygon points='19,15 19,29 29,22' fill='white' />
     </svg>
   );
 }
 
-const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
+const DemoCard = ({ id, title, poster, rate }: DemoCardProps) => {
   const [hover, setHover] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
@@ -54,7 +49,7 @@ const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
 
   const handleClick = () => {
     router.push(
-      `/aggregate?q=${encodeURIComponent(title.trim())}&type=${type}`
+      `/play?title=${encodeURIComponent(title.trim())}&douban_id=${id}`
     );
   };
 
@@ -103,7 +98,7 @@ const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
               hover ? 'scale-110 rotate-12' : 'scale-90'
             }`}
           >
-            <SearchCircle fillColor={hover ? '#22c55e' : 'none'} />
+            <PlayCircleSolid fillColor={hover ? '#22c55e' : 'none'} />
           </div>
         </div>
 
