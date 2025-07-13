@@ -8,8 +8,11 @@ export const runtime = 'edge';
 
 // 读取存储类型环境变量，默认 localstorage
 const STORAGE_TYPE =
-  (process.env.NEXT_PUBLIC_STORAGE_TYPE as string | undefined) ||
-  'localstorage';
+  (process.env.NEXT_PUBLIC_STORAGE_TYPE as
+    | 'localstorage'
+    | 'redis'
+    | 'd1'
+    | undefined) || 'localstorage';
 
 // 生成签名
 async function generateSignature(
