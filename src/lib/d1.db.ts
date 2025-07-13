@@ -1,5 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
+import { getRequestContext } from '@cloudflare/next-on-pages';
+
 import { AdminConfig } from './admin.types';
 import { Favorite, IStorage, PlayRecord } from './types';
 
@@ -116,12 +118,24 @@ const INIT_SQL = `
 
 // 获取全局D1数据库实例
 function getD1Database(): D1Database {
-  // 在 next-on-pages 环境中，D1 数据库通过 process.env 暴露
+  try {
+    // 在 Cloudflare Pages 环境中，通过 getRequestContext 访问 D1 数据库
+    const { env } = getRequestContext();
+    if (env && (env as any).DB) {
+      return (env as any).DB as D1Database;
+    }
+  } catch (error) {
+    // 如果 getRequestContext 失败，继续尝试其他方式
+    console.warn('Failed to get request context:', error);
+  }
+
+  // 在 next-on-pages 环境中，D1 数据库可能通过 process.env 暴露
   if (typeof process !== 'undefined' && (process.env as any).DB) {
     return (process.env as any).DB as D1Database;
   }
+
   throw new Error(
-    'D1 database not available. Make sure DB is bound in wrangler.toml'
+    'D1 database not available. Make sure DB is bound in your Cloudflare Pages project settings'
   );
 }
 
