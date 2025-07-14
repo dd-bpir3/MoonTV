@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
-    const config = getConfig();
+    const config = await getConfig();
     const user = config.UserConfig.Users.find((u) => u.username === username);
     if (user && user.banned) {
       return NextResponse.json({ error: '用户被封禁' }, { status: 401 });
