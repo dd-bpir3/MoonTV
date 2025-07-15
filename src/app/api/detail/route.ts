@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     }
 
     const result = await getDetailFromApi(apiSite, id);
-    const cacheTime = getCacheTime();
+    const cacheTime = await getCacheTime();
 
     return NextResponse.json(result, {
       headers: {

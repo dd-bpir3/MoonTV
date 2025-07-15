@@ -9,15 +9,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 
 import {
+  deleteFavorite,
   deletePlayRecord,
   generateStorageKey,
   getAllPlayRecords,
   isFavorited,
+  saveFavorite,
   savePlayRecord,
-  toggleFavorite,
+  subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
-import { getVideoResolutionFromM3u8 } from '@/lib/utils';
+import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
@@ -916,6 +918,22 @@ function PlayPageClient() {
     })();
   }, [currentSource, currentId]);
 
+  // 监听收藏数据更新事件
+  useEffect(() => {
+    if (!currentSource || !currentId) return;
+
+    const unsubscribe = subscribeToDataUpdates(
+      'favoritesUpdated',
+      (favorites: Record<string, any>) => {
+        const key = generateStorageKey(currentSource, currentId);
+        const isFav = !!favorites[key];
+        setFavorited(isFav);
+      }
+    );
+
+    return unsubscribe;
+  }, [currentSource, currentId]);
+
   // 切换收藏
   const handleToggleFavorite = async () => {
     if (
@@ -927,10 +945,13 @@ function PlayPageClient() {
       return;
 
     try {
-      const newState = await toggleFavorite(
-        currentSourceRef.current,
-        currentIdRef.current,
-        {
+      if (favorited) {
+        // 如果已收藏，删除收藏
+        await deleteFavorite(currentSourceRef.current, currentIdRef.current);
+        setFavorited(false);
+      } else {
+        // 如果未收藏，添加收藏
+        await saveFavorite(currentSourceRef.current, currentIdRef.current, {
           title: videoTitleRef.current,
           source_name: detailRef.current?.source_name || '',
           year: detailRef.current?.year,
@@ -938,9 +959,9 @@ function PlayPageClient() {
           total_episodes: detailRef.current?.episodes.length || 1,
           save_time: Date.now(),
           search_title: searchTitle,
-        }
-      );
-      setFavorited(newState);
+        });
+        setFavorited(true);
+      }
     } catch (err) {
       console.error('切换收藏失败:', err);
     }
@@ -1205,7 +1226,10 @@ function PlayPageClient() {
 
       artPlayerRef.current.on('video:timeupdate', () => {
         const now = Date.now();
-        if (now - lastSaveTimeRef.current > 5000) {
+        if (
+          now - lastSaveTimeRef.current >
+          (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1' ? 10000 : 5000)
+        ) {
           saveCurrentPlayProgress();
           lastSaveTimeRef.current = now;
         }
@@ -1591,7 +1615,7 @@ function PlayPageClient() {
               <div className='bg-gray-300 dark:bg-gray-700 aspect-[2/3] flex items-center justify-center rounded-xl overflow-hidden'>
                 {videoCover ? (
                   <img
-                    src={videoCover}
+                    src={processImageUrl(videoCover)}
                     alt={videoTitle}
                     className='w-full h-full object-cover'
                   />

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   try {
     const results = await Promise.all(searchPromises);
     const flattenedResults = results.flat();
-    const cacheTime = getCacheTime();
+    const cacheTime = await getCacheTime();
 
     return NextResponse.json(
       { results: flattenedResults },

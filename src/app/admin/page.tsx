@@ -50,7 +50,6 @@ interface SiteConfig {
   Announcement: string;
   SearchDownstreamMaxPage: number;
   SiteInterfaceCacheTime: number;
-  SearchResultDefaultAggregate: boolean;
 }
 
 // 视频源数据类型
@@ -125,6 +124,11 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
 
   // 当前登录用户名
   const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
+
+  // 检测存储类型是否为 d1
+  const isD1Storage =
+    typeof window !== 'undefined' &&
+    (window as any).RUNTIME_CONFIG?.STORAGE_TYPE === 'd1';
 
   useEffect(() => {
     if (config?.UserConfig) {
@@ -285,18 +289,29 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
           注册设置
         </h4>
         <div className='flex items-center justify-between'>
-          <label className='text-gray-700 dark:text-gray-300'>
+          <label
+            className={`text-gray-700 dark:text-gray-300 ${
+              isD1Storage ? 'opacity-50' : ''
+            }`}
+          >
             允许新用户注册
+            {isD1Storage && (
+              <span className='ml-2 text-xs text-gray-500 dark:text-gray-400'>
+                (D1 环境下不可修改)
+              </span>
+            )}
           </label>
           <button
             onClick={() =>
+              !isD1Storage &&
               toggleAllowRegister(!userSettings.enableRegistration)
             }
+            disabled={isD1Storage}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
               userSettings.enableRegistration
                 ? 'bg-green-600'
                 : 'bg-gray-200 dark:bg-gray-700'
-            }`}
+            } ${isD1Storage ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -932,10 +947,14 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
     Announcement: '',
     SearchDownstreamMaxPage: 1,
     SiteInterfaceCacheTime: 7200,
-    SearchResultDefaultAggregate: false,
   });
   // 保存状态
   const [saving, setSaving] = useState(false);
+
+  // 检测存储类型是否为 d1
+  const isD1Storage =
+    typeof window !== 'undefined' &&
+    (window as any).RUNTIME_CONFIG?.STORAGE_TYPE === 'd1';
 
   useEffect(() => {
     if (config?.SiteConfig) {
@@ -978,34 +997,60 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
     <div className='space-y-6'>
       {/* 站点名称 */}
       <div>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+        <label
+          className={`block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ${
+            isD1Storage ? 'opacity-50' : ''
+          }`}
+        >
           站点名称
+          {isD1Storage && (
+            <span className='ml-2 text-xs text-gray-500 dark:text-gray-400'>
+              (D1 环境下不可修改)
+            </span>
+          )}
         </label>
         <input
           type='text'
           value={siteSettings.SiteName}
           onChange={(e) =>
+            !isD1Storage &&
             setSiteSettings((prev) => ({ ...prev, SiteName: e.target.value }))
           }
-          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+          disabled={isD1Storage}
+          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+            isD1Storage ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         />
       </div>
 
       {/* 站点公告 */}
       <div>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+        <label
+          className={`block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ${
+            isD1Storage ? 'opacity-50' : ''
+          }`}
+        >
           站点公告
+          {isD1Storage && (
+            <span className='ml-2 text-xs text-gray-500 dark:text-gray-400'>
+              (D1 环境下不可修改)
+            </span>
+          )}
         </label>
         <textarea
           value={siteSettings.Announcement}
           onChange={(e) =>
+            !isD1Storage &&
             setSiteSettings((prev) => ({
               ...prev,
               Announcement: e.target.value,
             }))
           }
+          disabled={isD1Storage}
           rows={3}
-          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+            isD1Storage ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         />
       </div>
 
@@ -1047,41 +1092,15 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
         />
       </div>
 
-      {/* 默认按标题和年份聚合 */}
-      <div className='flex items-center justify-between'>
-        <label className='text-gray-700 dark:text-gray-300'>
-          搜索结果默认按标题和年份聚合
-        </label>
-        <button
-          onClick={() =>
-            setSiteSettings((prev) => ({
-              ...prev,
-              SearchResultDefaultAggregate: !prev.SearchResultDefaultAggregate,
-            }))
-          }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-            siteSettings.SearchResultDefaultAggregate
-              ? 'bg-green-600'
-              : 'bg-gray-200 dark:bg-gray-700'
-          }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              siteSettings.SearchResultDefaultAggregate
-                ? 'translate-x-6'
-                : 'translate-x-1'
-            }`}
-          />
-        </button>
-      </div>
-
       {/* 操作按钮 */}
       <div className='flex justify-end'>
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || isD1Storage}
           className={`px-4 py-2 ${
-            saving ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
+            saving || isD1Storage
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700'
           } text-white rounded-lg transition-colors`}
         >
           {saving ? '保存中…' : '保存'}
